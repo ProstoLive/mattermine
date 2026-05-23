@@ -65,7 +65,7 @@ pub enum Command {
 
 pub fn parse_command(text: &str) -> Command {
     let text = text.trim();
-    if let Some(rest) = text.strip_prefix("set-password ") {
+    if let Some(rest) = text.strip_prefix("passwd ") {
         let pw = rest.trim();
         if !pw.is_empty() {
             return Command::SetPassword(pw.to_string());
@@ -173,7 +173,7 @@ async fn handle_set_password(
         let _ = send_message(
             &state,
             &channel_id,
-            "Database error storing password. Please try again.",
+            "Internal error. Please try again.",
         )
         .await;
         delete_post(&state, &post_id).await;
@@ -209,7 +209,8 @@ pub async fn dispatch(
             let _ = send_message(
                 &state,
                 &channel_id,
-                "Unknown command. Use `set-password <password>` to set your Minecraft password.",
+                "Неизвестная команда. Используйте `passwd <пароль>` чтобы установить пароль для вашего майнкрафт аккаунта.\n
+                Этот пароль влияет только на майнкрафт аккаунт и не влияет на пароль вашей основной доменной учетной записи.",
             )
             .await;
         }
