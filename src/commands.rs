@@ -66,15 +66,15 @@ pub enum Command {
 
 pub fn parse_command(text: &str) -> Command {
     let text = text.trim();
-    if text == "/my-password" {
+    if text == "my-password" {
         return Command::MyPassword;
     }
-    if let Some(rest) = text.strip_prefix("/set-password ") {
+    if let Some(rest) = text.strip_prefix("set-password ") {
         let pw = rest.trim();
         if !pw.is_empty() {
             return Command::SetPassword(pw.to_string());
         }
-    } else if text == "/set-password" {
+    } else if text == "set-password" {
         return Command::Unknown;
     }
     Command::Unknown
@@ -247,8 +247,8 @@ pub async fn dispatch(
                 &state,
                 &channel_id,
                 "Unknown command. Available commands:\n\
-                 - `/set-password <password>` — set your Minecraft password\n\
-                 - `/my-password` — check whether a password is set",
+                 - `set-password <password>` — set your Minecraft password\n\
+                 - `my-password` — check whether a password is set",
             )
             .await;
         }
