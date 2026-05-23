@@ -60,22 +60,16 @@ impl RateLimiter {
 
 pub enum Command {
     SetPassword(String),
-    MyPassword,
     Unknown,
 }
 
 pub fn parse_command(text: &str) -> Command {
     let text = text.trim();
-    if text == "my-password" {
-        return Command::MyPassword;
-    }
     if let Some(rest) = text.strip_prefix("set-password ") {
         let pw = rest.trim();
         if !pw.is_empty() {
             return Command::SetPassword(pw.to_string());
         }
-    } else if text == "set-password" {
-        return Command::Unknown;
     }
     Command::Unknown
 }
@@ -191,34 +185,6 @@ async fn handle_set_password(
     delete_post(&state, &post_id).await;
 }
 
-async fn handle_my_password(state: Arc<AppState>, username: String, channel_id: String) {
-    match db::get_password_record(&state.pool, &username).await {
-        Err(e) => {
-            error!("DB error fetching password record for {}: {:#}", username, e);
-            let _ = send_message(
-                &state,
-                &channel_id,
-                "Could not retrieve your password status. Please try again.",
-            )
-            .await;
-        }
-        Ok(None) => {
-            let _ = send_message(
-                &state,
-                &channel_id,
-                "No password is currently set for your account.",
-            )
-            .await;
-        }
-        Ok(Some(record)) => {
-            let msg = format!(
-                "A password is set for your account (last updated: {}).",
-                record.updated_at.format("%Y-%m-%d %H:%M UTC")
-            );
-            let _ = send_message(&state, &channel_id, &msg).await;
-        }
-    }
-}
 
 pub async fn dispatch(
     state: Arc<AppState>,
@@ -239,16 +205,11 @@ pub async fn dispatch(
         Command::SetPassword(pw) => {
             handle_set_password(state, username, pw, post_id, channel_id).await;
         }
-        Command::MyPassword => {
-            handle_my_password(state, username, channel_id).await;
-        }
         Command::Unknown => {
             let _ = send_message(
                 &state,
                 &channel_id,
-                "Unknown command. Available commands:\n\
-                 - `set-password <password>` — set your Minecraft password\n\
-                 - `my-password` — check whether a password is set",
+                "Unknown command. Use `set-password <password>` to set your Minecraft password.",
             )
             .await;
         }
